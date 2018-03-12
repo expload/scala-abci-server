@@ -3,6 +3,7 @@ package io.mytc.tendermint.abci
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Tcp}
+import akka.stream.alpakka.unixdomainsocket.scaladsl.UnixDomainSocket
 import akka.util.ByteString
 import com.tendermint.abci._
 
@@ -11,9 +12,10 @@ import scala.concurrent._
 object Server {
 
   case class Config(
-    host: String  = "127.0.0.1",
-    port: Int     = 46658,
-    nthreads: Int = 4
+    host: String   = "127.0.0.1",
+    port: Int      = 46658,
+    usock: String  = "./abci.sock",
+    nthreads: Int  = 4
   )
 
   def apply(cfg: Config, api: Api)
@@ -33,8 +35,13 @@ class Server(val cfg: Server.Config, val api: Api)
       .mapAsync(cfg.nthreads)(handleRequest)
       .via(teaspoon.PBEncoder())
       .via(teaspoon.Encoder())
-    val binding = Tcp().bind(cfg.host, cfg.port)
-    binding.runForeach(_.handleWith(requestHandler))
+    if (cfg.usock.isEmpty) {
+      val binding = Tcp().bind(cfg.host, cfg.port)
+      binding.runForeach(_.handleWith(requestHandler))
+    } else {
+      val binding = UnixDomainSocket().bind(new java.io.File(cfg.usock))
+      binding.runForeach(_.handleWith(requestHandler))
+    }
   }
 
   private def handleRequest(request: Request): Future[Response] = {
