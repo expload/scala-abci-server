@@ -24,13 +24,21 @@ class DecoderTest() extends TestKit(ActorSystem("Decoder"))
     TestKit.shutdownActorSystem(system)
   }
 
+  private def mkMessage(str: Array[Byte]): ByteString = {
+    val len = ByteString(BigInt(str.size).toByteArray)
+    val lenlen = ByteString(BigInt(len.size).toByteArray)
+    lenlen ++ len ++ ByteString(str)
+  }
+
   private def mkMessage(str: String): ByteString = {
-    ByteString( Array[Byte](1, str.size.toByte) ) ++ ByteString(str)
+    val len = ByteString(BigInt(str.size).toByteArray)
+    val lenlen = ByteString(BigInt(len.size).toByteArray)
+    lenlen ++ len ++ ByteString(str)
   }
 
   "Teaspoon Decoder" must {
 
-    "Decode single request correctly" in {
+    "Decodes single request correctly" in {
 
       val sink = Decoder().toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right)
       val (ref, future) = Source.actorRef(8, OverflowStrategy.fail).toMat(sink)(Keep.both).run()
@@ -45,7 +53,7 @@ class DecoderTest() extends TestKit(ActorSystem("Decoder"))
 
     }
 
-    "Decode several requests correctly" in {
+    "Decodes several requests correctly" in {
 
       val sink = Decoder().toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right)
       val (ref, future) = Source.actorRef(8, OverflowStrategy.fail).toMat(sink)(Keep.both).run()
@@ -65,7 +73,7 @@ class DecoderTest() extends TestKit(ActorSystem("Decoder"))
 
     }
 
-    "Decode chunked byte stream correctly" in {
+    "Decodes chunked byte stream correctly" in {
 
       val sink = Decoder().toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right)
       val (ref, future) = Source.actorRef(8, OverflowStrategy.fail).toMat(sink)(Keep.both).run()
@@ -81,6 +89,40 @@ class DecoderTest() extends TestKit(ActorSystem("Decoder"))
 
       val result = Await.result(future, 3.seconds)
       assert(ByteString(msg1) ++ ByteString(msg2) ++ ByteString(msg3) == result)
+
+    }
+
+    "Decodes 128-lengthed arrays correct" in {
+
+      val rand = new scala.util.Random(1)
+
+      val sink = Decoder().toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right)
+      val (ref, future) = Source.actorRef(8, OverflowStrategy.fail).toMat(sink)(Keep.both).run()
+
+      val msg = Array.fill(128)(rand.nextInt.toByte)
+
+      ref ! mkMessage(msg)
+      ref ! akka.actor.Status.Success("done")
+
+      val result = Await.result(future, 3.seconds)
+      assert(ByteString(msg) == result)
+
+    }
+
+    "Decodes 256-lengthed arrays correct" in {
+
+      val rand = new scala.util.Random(1)
+
+      val sink = Decoder().toMat(Sink.fold(ByteString())(_ ++ _))(Keep.right)
+      val (ref, future) = Source.actorRef(8, OverflowStrategy.fail).toMat(sink)(Keep.both).run()
+
+      val msg = Array.fill(256)(rand.nextInt.toByte)
+
+      ref ! mkMessage(msg)
+      ref ! akka.actor.Status.Success("done")
+
+      val result = Await.result(future, 3.seconds)
+      assert(ByteString(msg) == result)
 
     }
 

@@ -14,7 +14,7 @@ object Server {
   case class Config(
     host: String   = "127.0.0.1",
     port: Int      = 46658,
-    usock: String  = "./abci.sock",
+    usock: String  = "",
     nthreads: Int  = 4
   )
 

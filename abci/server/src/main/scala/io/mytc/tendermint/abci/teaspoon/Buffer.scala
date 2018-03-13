@@ -38,7 +38,7 @@ final class Buffer {
     var i = 1
     var len = 0
     while (i <= lenlen) {
-      len = (len << 8) | buf(i)
+      len = (len << 8) | (buf(i) & 0xff)
       i += 1
     }
 
