@@ -15,40 +15,35 @@ final class Buffer {
   }
 
   def extractMessage(): Option[ByteString] = {
-    val (lenlen, b, m) = readMessage(buf)
-    buf = b
-    m
+    val (remaining, message) = readMessage(buf)
+    buf = remaining
+    message
   }
 
   def bytes: ByteString = {
     buf
   }
 
-  private def readMessage(buf: ByteString): (Int, ByteString, Option[ByteString]) = {
-    val none = (0, buf, Option.empty[ByteString])
-
-    // The first byte in the message represents the length of the Big Endian encoded length.
+  private def readMessage(buf: ByteString): (ByteString, Option[ByteString]) = {
+    import com.google.protobuf.CodedInputStream
+    val none = (buf, Option.empty[ByteString])
     if (buf.size < 1)
       return none
-
-    val lenlen = buf(0) & 0xFF
-    if (buf.size < 1 + lenlen)
-      return none
-
-    var i = 1
-    var len = 0
-    while (i <= lenlen) {
-      len = (len << 8) | (buf(i) & 0xff)
-      i += 1
+    // Header is a varint encoded length with notag
+    // https://developers.google.com/protocol-buffers/docs/encoding#varints
+    // https://github.com/jTendermint/jabci/blob/aff15ae3dbe3e698e706c65c4a46342dd572432b/src/main/java/com/github/jtendermint/jabci/socket/TSocket.java#L221
+    try {
+      val in = CodedInputStream.newInstance(buf.iterator.asInputStream)
+      val len = CodedInputStream.decodeZigZag64(in.readUInt64()).asInstanceOf[Int]
+      val lenlen = in.getTotalBytesRead
+      val (msg, b) = buf.splitAt(lenlen + len)
+      val (hdr, m) = msg.splitAt(lenlen)
+      (b, Some(m))
+    } catch {
+      case e: Exception ⇒
+        println("decode error: " + e.getMessage)
+        none
     }
-
-    if (buf.size < 1 + lenlen + len)
-      return none
-
-    val (msg, b) = buf.splitAt(1 + lenlen + len)
-    val (hdr, m) = msg.splitAt(1 + lenlen)
-
-    (lenlen, b, Some(m))
   }
 
 }
