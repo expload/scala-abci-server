@@ -47,7 +47,6 @@ final class Decoder extends GraphStage[FlowShape[ByteString, ByteString]] {
     override def onPush(): Unit = {
       val bytes = grab(in)
       buf.grow(bytes)
-      println(bytes)
       tryPushMessage()
     }
 

@@ -3,7 +3,7 @@ package io.mytc.tendermint.abci
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Tcp}
-import akka.stream.alpakka.unixdomainsocket.scaladsl.UnixDomainSocket
+import io.mytc.akka.stream.UnixDomainSocket
 import akka.util.ByteString
 import com.tendermint.abci._
 
@@ -39,8 +39,8 @@ class Server(val cfg: Server.Config, val api: Api)
       val binding = Tcp().bind(cfg.host, cfg.port)
       binding.runForeach(_.handleWith(requestHandler))
     } else {
-      val binding = UnixDomainSocket().bind(new java.io.File(cfg.usock))
-      binding.runForeach(_.handleWith(requestHandler))
+      val sock = new java.io.File(cfg.usock)
+      UnixDomainSocket().bindAndHandle(requestHandler, sock)
     }
   }
 

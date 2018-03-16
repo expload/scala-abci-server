@@ -13,7 +13,12 @@ object DummyApplication {
     implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 
     val server = Server(
-      cfg = Server.Config(),
+      cfg = Server.Config(
+        host      = "127.0.0.1",
+        port      = 46658,
+        usock     = "/tmp/timechain/alice/abci.sock",
+        nthreads  = 4
+      ),
       api = DummyApi()
     )
 

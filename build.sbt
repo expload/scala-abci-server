@@ -25,7 +25,7 @@ lazy val server = (project in file("abci") / "server").
       "com.typesafe.akka"     %% "akka-stream"      % "2.5.8",
       "com.thesamet.scalapb"  %% "scalapb-runtime"  % scalapb.compiler.Version.scalapbVersion % "protobuf",
 
-      "com.lightbend.akka"    %% "akka-stream-alpakka-unix-domain-socket" % "0.17",
+      "com.github.jnr"        % "jnr-unixsocket"    % "0.18",
 
       "org.scalatest"     %% "scalatest"            % "3.0.5"   % Test,
       "com.typesafe.akka" %% "akka-testkit"         % "2.5.11"  % Test,
