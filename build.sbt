@@ -15,7 +15,7 @@ val commonSettings = Seq(
 lazy val server = (project in file("abci") / "server").
   settings(
     normalizedName := "scala-abci-server",
-    version := "0.9.0"
+    version := "0.9.2"
   ).
   settings( commonSettings: _* ).
   settings( PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value) ).
@@ -36,7 +36,7 @@ lazy val server = (project in file("abci") / "server").
 lazy val dummyServer = (project in file("examples") / "abci" / "server" / "dummy" ).
   settings(
     normalizedName := "scala-abci-dummy-server",
-    version := "0.1"
+    version := "0.1.1"
   ).
   settings( commonSettings: _* ).
   enablePlugins(JavaAppPackaging).
