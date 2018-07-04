@@ -1,5 +1,17 @@
+
+// Git Versions
+enablePlugins(GitVersioning)
+git.formattedShaVersion := git.gitHeadCommit.value map { sha => sha.take(8) }
+git.gitTagToVersionNumber := { tag: String =>
+  if (tag.length > 0) Some(tag)
+  else None
+}
+
+
+skip in publish := true
+
 val commonSettings = Seq(
-  organization := "io.mytc",
+  organization := "com.expload",
   crossScalaVersions := Seq("2.12.4"),
   scalacOptions ++= Seq(
     "-deprecation",
@@ -9,15 +21,23 @@ val commonSettings = Seq(
     "-Yno-adapted-args",
     "-Ywarn-numeric-widen",
     "-Ywarn-unused-import"
-  )
+  ),
+  skip in publish := true,
+  bintrayOmitLicense := true,
+  // licenses += ("Apache-2.0", url("http://www.opensource.org/licenses/apache2.0.php")),
+  bintrayOrganization := Some("expload"),
+  bintrayRepository := "oss",
+  bintrayVcsUrl := Some("https://github.com/expload/scala-abci-server")
 )
 
 lazy val server = (project in file("abci") / "server").
+  settings( commonSettings: _* ).
   settings(
     normalizedName := "scala-abci-server",
-    version := "0.9.2"
+    name := "scala-abci-server",
+    description := "ABCI Server",
+    skip in publish := false
   ).
-  settings( commonSettings: _* ).
   settings( PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value) ).
   settings(
     libraryDependencies ++= Seq (
