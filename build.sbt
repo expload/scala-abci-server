@@ -7,6 +7,15 @@ git.gitTagToVersionNumber := { tag: String =>
   else None
 }
 
+val scalacheckOps = Seq(
+  libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
+  testOptions in Test ++= Seq(
+    Tests.Argument(TestFrameworks.ScalaCheck, "-verbosity", "3"),
+    Tests.Argument(TestFrameworks.ScalaCheck, "-workers", "1"),
+    Tests.Argument(TestFrameworks.ScalaCheck, "-minSuccessfulTests", "50")
+  )
+)
+
 val commonSettings = Seq(
   organization := "com.expload",
   crossScalaVersions := Seq("2.12.4"),
@@ -42,12 +51,12 @@ lazy val server = (project in file("abci") / "server").
       "com.thesamet.scalapb"  %% "scalapb-runtime"  % scalapb.compiler.Version.scalapbVersion % "protobuf",
 
       "com.github.jnr"        % "jnr-unixsocket"    % "0.18",
-
-      "org.scalatest"     %% "scalatest"            % "3.0.5"   % Test,
+      
       "com.typesafe.akka" %% "akka-testkit"         % "2.5.11"  % Test,
       "com.typesafe.akka" %% "akka-stream-testkit"  % "2.5.11"  % Test
     )
-  )
+  ).
+  settings(scalacheckOps: _*)
 
 lazy val dummyServer = (project in file("examples") / "abci" / "server" / "dummy" ).
   settings( commonSettings: _* ).
