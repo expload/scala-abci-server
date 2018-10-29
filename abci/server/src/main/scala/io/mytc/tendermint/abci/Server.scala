@@ -29,12 +29,15 @@ object Server {
     new Server(cfg, api)
   }
 
+  sealed trait ServerBinding {
+    def unbind(): Future[Unit]
+  }
 }
 
 class Server(val cfg: Server.Config, val api: Api)
             (implicit am: Materializer, as: ActorSystem, ec: ExecutionContext) {
 
-  def start(): Unit = {
+  def start(): Future[Server.ServerBinding] = {
     val requestHandler = Flow[ByteString]
       .via(teaspoon.Decoder())
       .via(teaspoon.PBDecoder())
@@ -43,11 +46,18 @@ class Server(val cfg: Server.Config, val api: Api)
       .via(teaspoon.Encoder())
     cfg.connectionMethod match {
       case ConnectionMethod.Tcp(host, port) =>
-        val binding = Tcp().bind(host, port)
-        binding.runForeach(_.handleWith(requestHandler))
+        Tcp().bindAndHandle(requestHandler, host, port).map { b =>
+          new Server.ServerBinding {
+            def unbind(): Future[Unit] = b.unbind()
+          }
+        }
       case ConnectionMethod.UnixSocket(path) =>
         val sock = new java.io.File(path)
-        UnixDomainSocket().bindAndHandle(requestHandler, sock)
+        UnixDomainSocket().bindAndHandle(requestHandler, sock).map { b =>
+          new Server.ServerBinding {
+            def unbind(): Future[Unit] = b.unbind()
+          }
+        }
     }
   }
 
@@ -67,5 +77,4 @@ class Server(val cfg: Server.Config, val api: Api)
       case _ ⇒ api.notImplemented()
     }
   }
-
 }
