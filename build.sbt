@@ -12,7 +12,7 @@ val scalacheckOps = Seq(
   testOptions in Test ++= Seq(
     Tests.Argument(TestFrameworks.ScalaCheck, "-verbosity", "3"),
     Tests.Argument(TestFrameworks.ScalaCheck, "-workers", "1"),
-    Tests.Argument(TestFrameworks.ScalaCheck, "-minSuccessfulTests", "50")
+    Tests.Argument(TestFrameworks.ScalaCheck, "-minSuccessfulTests", "100")
   )
 )
 
