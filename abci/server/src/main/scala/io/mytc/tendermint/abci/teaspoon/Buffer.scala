@@ -36,12 +36,16 @@ final class Buffer {
       val in = CodedInputStream.newInstance(buf.iterator.asInputStream)
       val len = CodedInputStream.decodeZigZag64(in.readUInt64()).asInstanceOf[Int]
       val lenlen = in.getTotalBytesRead
-      val (msg, b) = buf.splitAt(lenlen + len)
-      val (hdr, m) = msg.splitAt(lenlen)
-      (b, Some(m))
+      if (buf.length >= lenlen + len) {
+        val (msg, b) = buf.splitAt(lenlen + len)
+        val (hdr, m) = msg.splitAt(lenlen)
+        (b, Some(m))
+      } else {
+        none
+      }
     } catch {
       case e: Exception ⇒
-        println("decode error: " + e.getMessage)
+        //println("decode error: " + e.getMessage)
         none
     }
   }
