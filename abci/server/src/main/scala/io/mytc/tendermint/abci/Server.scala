@@ -42,8 +42,10 @@ class Server(val cfg: Server.Config, val api: Api)
       .via(teaspoon.Decoder())
       .via(teaspoon.PBDecoder())
       .mapAsync(cfg.nthreads)(handleRequest)
+      .log("abci")
       .via(teaspoon.PBEncoder())
       .via(teaspoon.Encoder())
+
     cfg.connectionMethod match {
       case ConnectionMethod.Tcp(host, port) =>
         Tcp().bindAndHandle(requestHandler, host, port).map { b =>
